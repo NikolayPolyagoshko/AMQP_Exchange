@@ -1,0 +1,24 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+# SharpDevelop 5.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AMQP_Exchange", "AMQP_Exchange\AMQP_Exchange.csproj", "{C74A7A84-D0DE-45D0-95C2-3900E25C0FB7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AMQP_Db", "AMQP_Db\AMQP_Db.csproj", "{95C4CEE0-E984-4D92-9BA5-2F3EA8E34CE7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C74A7A84-D0DE-45D0-95C2-3900E25C0FB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C74A7A84-D0DE-45D0-95C2-3900E25C0FB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C74A7A84-D0DE-45D0-95C2-3900E25C0FB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C74A7A84-D0DE-45D0-95C2-3900E25C0FB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95C4CEE0-E984-4D92-9BA5-2F3EA8E34CE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95C4CEE0-E984-4D92-9BA5-2F3EA8E34CE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95C4CEE0-E984-4D92-9BA5-2F3EA8E34CE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95C4CEE0-E984-4D92-9BA5-2F3EA8E34CE7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
