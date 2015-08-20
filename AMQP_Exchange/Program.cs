@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.ServiceProcess;
 using System.Text;
 
@@ -21,6 +22,13 @@ namespace AMQP_Exchange
 		/// </summary>
 		static void Main()
 		{
+			try {
+				Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Path.GetTempPath(), Exchange_Svc.MyServiceName, "trace.log")));
+			} catch (Exception ex) {
+				Trace.TraceWarning("Main: не удалось создать журнал trace: {0}", ex.Message);
+			}
+			Trace.AutoFlush = true;
+			
 			#if !DEBUG
 			// To run more than one service you have to add them here
 			ServiceBase.Run(new ServiceBase[] { new Exchange_Svc() });

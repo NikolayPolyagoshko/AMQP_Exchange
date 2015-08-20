@@ -124,7 +124,8 @@ namespace AMQP_Exchange
 							HostId = this.HostId,
 							QueueId = this.QueueId,
 							Outbound_Id = message.Message_Id,
-							Message = "Сообщение успешно отправлено!" }
+							Message = "Сообщение успешно отправлено!",
+							Details = this.QueueFullName }
 						.Write(exdb);
 						
 						message.DateSent = DateTime.Now;
@@ -141,7 +142,7 @@ namespace AMQP_Exchange
 				Source = this._Name,
 				HostId = this.HostId,
 				QueueId = this.QueueId,
-				Message = "Получена команда остановить обработчик. Закрываемся",
+				Message = "Получена команда остановить обработчик. Нормальное завершение работы",
 				Details = QueueFullName }
 			.Write(dbStr, dbLog);
 		}

@@ -55,20 +55,25 @@ namespace AMQP_Exchange
 			
 			var aBus = Bus.Advanced;
 			var queue = aBus.QueueDeclare(QueueName);
-			aBus.Consume(queue, (body, messprops, messinfo) 
+			var handle = aBus.Consume(queue, (body, messprops, messinfo) 
 			             => Task.Factory.StartNew(()
 			             => MessageHandler(body, messprops, messinfo)));
 			
 			while (!ShouldStop) {
+				// FIXME: Если сервер игнорирует durable=true для очереди она не переживет его рестарт
+				// при потере связи с сервером и последующем её восстановлении нужно проверять существование 
+				// очереди и пересоздавать в случае необходимости
+				// события aBus.Disconnected aBus.Connected
 				Thread.Sleep(1000);
 			}
 			
 			// Вышли из главного цикла (ShouldStop = true)
+			handle.Dispose();
 			new LogRecord() {
 				Source = this._Name,
 				HostId = this.HostId,
 				QueueId = this.QueueId,
-				Message = "Получена команда остановить обработчик",
+				Message = "Получена команда остановить обработчик. Нормальное завершение работы",
 				Details = QueueFullName }
 			.Write(dbStr, dbLog);
 		}
@@ -82,8 +87,8 @@ namespace AMQP_Exchange
 					Source = this._Name,
 					HostId = this.HostId,
 					QueueId = this.QueueId,
-					Message = "Принято сообщение",
-					Details = String.Format("{0} байт", body.Length) }
+					Message = String.Format("Принято сообщение {0} байт", body.Length),
+					Details =  this.QueueFullName }
 				.Write(exdb);
 			
 				var msg = Queue.Base64Data ? Convert.ToBase64String(body) 

@@ -68,7 +68,9 @@ namespace AMQP_Exchange
 		/// </summary>
 		protected override void OnStart(string[] args)
 		{
-			if (args.Length > 0 && args.Contains("-debug")) {
+			string[] svcArgs = Environment.GetCommandLineArgs();
+			if (svcArgs.Length > 0 && svcArgs.Contains("-debug")) {
+				Trace.TraceInformation("Debug enabled");
 				DebugFlag.Enabled = true;
 			}
 			Start();
@@ -90,15 +92,7 @@ namespace AMQP_Exchange
 				}
 			}
 			
-			try {
-				Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Path.GetTempPath(), Exchange_Svc.MyServiceName, "trace.log")));
-			} catch (Exception ex) {
-				Trace.TraceWarning("{0}: не удалось создать журнал trace: {1}", _Name, ex.Message);
-			}
-			Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Path.GetTempPath(), Exchange_Svc.MyServiceName, "trace.log")));
-			Trace.AutoFlush = true;
-			
-			Trace.TraceInformation("{0} запуск службы...");
+			Trace.TraceInformation("{0}: запускается...", _Name);
 			
 			if (dbStr == null || String.IsNullOrWhiteSpace(dbStr)) {
 				FailStart("Запуск невозможен: строка подключения к БД не может быть пустой");
@@ -404,6 +398,13 @@ namespace AMQP_Exchange
 				
 				w.Kill();
 			}
+			
+			new LogRecord() {
+					Source = _Name,
+					Message = "Все обработчики остановлены. Завершение работы службы" }
+			.Write(dbStr, dbLog);
+			
+			Trace.TraceInformation("{0}: нормальное завершение работы", _Name);
 		}
 	}
 }
