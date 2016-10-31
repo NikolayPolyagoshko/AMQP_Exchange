@@ -101,8 +101,10 @@ namespace AMQP_Exchange
 						.Write(exdb);
 						
 						try {
+							var mp = new MessageProperties();
+							mp.MessageId = message.Message_Id.ToString();
 							
-							aBus.Publish(Exchange.GetDefault(), this.QueueName,  true, false, new MessageProperties(), data);
+							aBus.Publish(Exchange.GetDefault(), this.QueueName,  true, false, mp, data);
 						
 						} catch (Exception ex) {
 							new LogRecord() {
