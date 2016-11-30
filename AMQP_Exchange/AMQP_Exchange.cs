@@ -70,7 +70,7 @@ namespace AMQP_Exchange
 		{
 			string[] svcArgs = Environment.GetCommandLineArgs();
 			if (svcArgs.Length > 0 && svcArgs.Contains("-debug")) {
-				Trace.TraceInformation("Debug enabled");
+				Trace.TraceInformation("{0}\tDebug enabled", DateTime.Now);
 				DebugFlag.Enabled = true;
 			}
 			Start();
@@ -81,18 +81,18 @@ namespace AMQP_Exchange
 			try {
 				Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Exchange_Svc.MyServiceName));
 			} catch (Exception ex) {
-				Trace.TraceWarning("{0}: не удалось создать папку логов: {1}", _Name, ex.Message);
+				Trace.TraceWarning("{2}\t{0}: не удалось создать папку логов: {1}", _Name, ex.Message, DateTime.Now);
 			}
 			
 			if (DebugFlag.Enabled) {
 				try {
 					dbLog = new StreamWriter(Path.Combine(Path.GetTempPath(), Exchange_Svc.MyServiceName, "service.dblog")) {AutoFlush = true};
 				} catch (Exception ex) {
-					Trace.TraceWarning("{0}: не удалось создать журнал dblog: {1}", _Name, ex.Message);
+					Trace.TraceWarning("{2}\t{0}: не удалось создать журнал dblog: {1}", _Name, ex.Message, DateTime.Now);
 				}
 			}
 			
-			Trace.TraceInformation("{0}: запускается...", _Name);
+			Trace.TraceInformation("{1}\t{0}: запускается...", _Name, DateTime.Now);
 			
 			if (dbStr == null || String.IsNullOrWhiteSpace(dbStr)) {
 				FailStart("Запуск невозможен: строка подключения к БД не может быть пустой");
@@ -113,7 +113,7 @@ namespace AMQP_Exchange
 						}
 						else {
 							errorCounter++;
-							Trace.TraceWarning("Неудачная попытка подключения к БД: {0}", ex.Message);
+							Trace.TraceWarning("{1}\tНеудачная попытка подключения к БД: {0}", ex.Message, DateTime.Now);
 							Thread.Sleep(1000);
 						}
 					}
@@ -223,7 +223,7 @@ namespace AMQP_Exchange
 								r_Log = new RabbitTextLogger(new StreamWriter(Path.Combine(Path.GetTempPath(), Exchange_Svc.MyServiceName, String.Format("rabbit_{0}.log", host.Host_Id))) {AutoFlush = true});
 								//r_Log = new EasyNetQ.Loggers.ConsoleLogger();
 							} catch (Exception ex) {
-								Trace.TraceWarning("{0}: не удалось создать журнал rabbit_{1} ({2}): {3}", _Name, host.Host_Id, host.ConnectionString, ex.Message);
+								Trace.TraceWarning("{4}\t{0}: не удалось создать журнал rabbit_{1} ({2}): {3}", _Name, host.Host_Id, host.ConnectionString, ex.Message, DateTime.Now);
 							}
 						}
 						
@@ -324,7 +324,7 @@ namespace AMQP_Exchange
 		{
 			this.ExitCode = 1;
 			this.EventLog.WriteEntry(message, EventLogEntryType.Error);
-			Trace.TraceError(message);
+			Trace.TraceError("{0}\t{1}", message, DateTime.Now);
 			this.Stop();
 		}
 
@@ -404,7 +404,7 @@ namespace AMQP_Exchange
 					Message = "Все обработчики остановлены. Завершение работы службы" }
 			.Write(dbStr, dbLog);
 			
-			Trace.TraceInformation("{0}: нормальное завершение работы", _Name);
+			Trace.TraceInformation("{1}\t{0}: нормальное завершение работы", _Name, DateTime.Now);
 		}
 	}
 }

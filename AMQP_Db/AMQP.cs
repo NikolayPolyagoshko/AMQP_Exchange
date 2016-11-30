@@ -1002,6 +1002,8 @@ namespace AMQP_Db
 		
 		private string _Name;
 		
+		private string _Exchange;
+		
 		private System.Nullable<int> _SenderPollInterval;
 		
 		private bool _Base64Data;
@@ -1022,6 +1024,8 @@ namespace AMQP_Db
     partial void OnDirectionChanged();
     partial void OnNameChanging(string value);
     partial void OnNameChanged();
+    partial void OnExchangeChanging(string value);
+    partial void OnExchangeChanged();
     partial void OnSenderPollIntervalChanging(System.Nullable<int> value);
     partial void OnSenderPollIntervalChanged();
     partial void OnBase64DataChanging(bool value);
@@ -1100,7 +1104,7 @@ namespace AMQP_Db
 			}
 		}
 		
-		[Column(Storage="_Name", DbType="NVarChar(200) NOT NULL", CanBeNull=false)]
+		[Column(Storage="_Name", DbType="NVarChar(1000)", CanBeNull=true)]
 		public string Name
 		{
 			get
@@ -1115,6 +1119,26 @@ namespace AMQP_Db
 					this.SendPropertyChanging();
 					this._Name = value;
 					this.SendPropertyChanged("Name");
+					this.OnNameChanged();
+				}
+			}
+		}
+		
+		[Column(Storage="_Exchange", DbType="NVarChar(1000)", CanBeNull=true)]
+		public string Exchange
+		{
+			get
+			{
+				return this._Exchange;
+			}
+			set
+			{
+				if ((this._Exchange != value))
+				{
+					this.OnNameChanging(value);
+					this.SendPropertyChanging();
+					this._Exchange = value;
+					this.SendPropertyChanged("Exchange");
 					this.OnNameChanged();
 				}
 			}

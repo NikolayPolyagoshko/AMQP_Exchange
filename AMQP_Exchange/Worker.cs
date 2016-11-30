@@ -27,6 +27,7 @@ namespace AMQP_Exchange
 		public int QueueId {get {return Queue.Queue_Id;}}
 		public string QueueName {get {return Queue.Name;}}
 		public string QueueFullName {get {return String.Format("{0} : {1}", Queue.Name, Queue.Direction);}}
+		public string ExchangeName {get {return Queue.Exchange;}}
 		
 		public bool ShouldStop {get; set;}
 		public Thread Thread {get; private set;}

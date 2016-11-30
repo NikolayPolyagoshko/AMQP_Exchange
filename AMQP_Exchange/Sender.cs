@@ -40,7 +40,7 @@ namespace AMQP_Exchange
 				try {
 					dbLog = new StreamWriter(Path.Combine(Path.GetTempPath(), Exchange_Svc.MyServiceName, String.Format("{0}.dblog", _Name))) {AutoFlush = true};
 				} catch (Exception ex) {
-					Trace.TraceWarning("{0}: не удалось создать журнал dblog: {1}", _Name, ex.Message);
+					Trace.TraceWarning("{2}\t{0}: не удалось создать журнал dblog: {1}", _Name, ex.Message, DateTime.Now);
 				}
 			}
 			
@@ -104,7 +104,10 @@ namespace AMQP_Exchange
 							var mp = new MessageProperties();
 							mp.MessageId = message.Message_Id.ToString();
 							
-							aBus.Publish(Exchange.GetDefault(), this.QueueName,  true, false, mp, data);
+							IExchange ex = String.IsNullOrWhiteSpace(this.ExchangeName) ? Exchange.GetDefault() :
+								new Exchange(this.ExchangeName);
+							
+							aBus.Publish(ex, this.QueueName,  true, false, mp, data);
 						
 						} catch (Exception ex) {
 							new LogRecord() {
