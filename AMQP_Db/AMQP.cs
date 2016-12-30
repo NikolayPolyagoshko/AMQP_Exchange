@@ -822,6 +822,8 @@ namespace AMQP_Db
 		
 		private string _Message;
 		
+		private string _AppMsgId;
+		
 		private bool _ErrorFlag;
 		
     #region Extensibility Method Definitions
@@ -838,6 +840,8 @@ namespace AMQP_Db
     partial void OnDateSentChanged();
     partial void OnMessageChanging(string value);
     partial void OnMessageChanged();
+    partial void OnAppMsgIdChanging(string value);
+    partial void OnAppMsgIdChanged();
     partial void OnErrorFlagChanging(bool value);
     partial void OnErrorFlagChanged();
     #endregion
@@ -942,6 +946,26 @@ namespace AMQP_Db
 					this.SendPropertyChanging();
 					this._Message = value;
 					this.SendPropertyChanged("Message");
+					this.OnMessageChanged();
+				}
+			}
+		}
+		
+		[Column(Storage="_AppMsgId", DbType="NVarChar(1000)", UpdateCheck=UpdateCheck.Never)]
+		public string AppMsgId
+		{
+			get
+			{
+				return this._AppMsgId;
+			}
+			set
+			{
+				if ((this._AppMsgId != value))
+				{
+					this.OnMessageChanging(value);
+					this.SendPropertyChanging();
+					this._AppMsgId = value;
+					this.SendPropertyChanged("AppMsgId");
 					this.OnMessageChanged();
 				}
 			}

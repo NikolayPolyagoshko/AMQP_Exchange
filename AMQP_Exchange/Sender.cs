@@ -102,7 +102,9 @@ namespace AMQP_Exchange
 						
 						try {
 							var mp = new MessageProperties();
-							mp.MessageId = message.Message_Id.ToString();
+							if (!String.IsNullOrWhiteSpace(message.AppMsgId)) {
+								mp.MessageId = message.AppMsgId;
+							}
 							
 							IExchange ex = String.IsNullOrWhiteSpace(this.ExchangeName) ? Exchange.GetDefault() :
 								new Exchange(this.ExchangeName);
