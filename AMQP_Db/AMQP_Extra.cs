@@ -16,7 +16,7 @@ namespace AMQP_Db
 {
 	public partial class exDb
 	{
-	  	public bool TrySubmitChanges()
+	  	public bool TrySubmitChanges(bool Rethrow = false)
 	  	{
 	  		using (var sw = new StringWriter()) {
 	  			TextWriter stored_Log = this.Log;
@@ -27,6 +27,9 @@ namespace AMQP_Db
 	  				return true;
 	  			} catch (Exception ex) {
 	  				Trace.TraceError("Ошибка при работе с БД: {0}\nТекст запроса: {1}", ex.Message, sw.ToString());
+	  				if (Rethrow) {
+	  					throw;
+	  				}
 	  				return false;
 	  			} finally {
 	  				if (stored_Log != null) {

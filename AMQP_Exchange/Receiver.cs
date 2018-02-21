@@ -99,7 +99,8 @@ namespace AMQP_Exchange
 				    DateReceived = DateTime.Now,
 				    Message = msg };
 				exdb.Inbound.InsertOnSubmit(record);
-				exdb.TrySubmitChanges();
+				// Rethrow = true. Если не удалось записать сообщение в БД, таск должен упасть, чтобы EasyNetQ не отправил Ack раббиту
+				exdb.TrySubmitChanges(true);
 			
 				new LogRecord() {
 					Source = this._Name,
