@@ -7,6 +7,8 @@
  * Для изменения этого шаблона используйте меню "Инструменты | Параметры | Кодирование | Стандартные заголовки".
  */
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using AMQP_Db;
 using EasyNetQ;
@@ -18,7 +20,12 @@ namespace AMQP_Exchange
 	/// </summary>
 	abstract class Worker
 	{
-		protected readonly string dbStr;
+		protected readonly string dbConnStr;
+		// Была мысль, что Worker должен работать с Connection, а не ConnectionString, но:
+		// DataContext сам управляет пулами соединений, если при создании указать ConnectionString, но не в случае Connection 
+		
+		// protected readonly IDbConnection _dbConn;
+		protected readonly TextWriter dbTextLog;
 		protected readonly IBus Bus;
 		protected readonly RabbitQueue Queue;
 		protected readonly string _Name;
@@ -28,6 +35,7 @@ namespace AMQP_Exchange
 		public string QueueName {get {return Queue.Name;}}
 		public string QueueFullName {get {return String.Format("{0} : {1}", Queue.Name, Queue.Direction);}}
 		public string ExchangeName {get {return Queue.Exchange;}}
+		//public IDbConnection dbConn {get {return _dbConn;}}
 		
 		public bool ShouldStop {get; set;}
 		public Thread Thread {get; private set;}
@@ -44,11 +52,21 @@ namespace AMQP_Exchange
 			if (queue == null) {
 				throw new ArgumentNullException("queue");
 			}
-			dbStr = connStr;
+			dbConnStr = connStr;
+			
+			if (DebugFlag.Enabled) {
+				try {
+					dbTextLog = new StreamWriter(Path.Combine(Path.GetTempPath(), Exchange_Svc.MyServiceName, String.Format("{0}.dbTextLog", _Name))) {AutoFlush = true};
+				} catch (Exception ex) {
+					Trace.TraceWarning("{2}\t{0}: не удалось создать журнал dbTextLog: {1}", _Name, ex.Message, DateTime.Now);
+				}
+			}
+			
 			Bus = bus;
 			Queue = queue;
 			_Name = name;
 		}
+		
 		
 		public abstract void Start();
 		
@@ -59,7 +77,25 @@ namespace AMQP_Exchange
 			}
 			this.Thread = new Thread(new ThreadStart( this.Start ));
 			this.Thread.IsBackground = true;
-			this.Thread.Start();
+			try {
+				this.Thread.Start();
+			} catch (Exception ex) {
+				
+				new LogRecord() {
+					Source = this._Name,
+					HostId = this.HostId,
+					QueueId = this.QueueId,
+					Message = "Сбой обработчика!",
+					IsError = true,
+					Details = ex.Message }
+				.TryWrite(dbConnStr, dbTextLog);
+				
+				if (!ShouldStop) {
+					Respawn();
+				}
+				//throw;
+			}
+			
 		}
 		
 		public void Kill(int Delay = 100)

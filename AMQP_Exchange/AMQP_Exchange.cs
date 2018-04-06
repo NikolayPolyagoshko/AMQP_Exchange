@@ -34,7 +34,7 @@ namespace AMQP_Exchange
 		private System.Timers.Timer timer;
 		private object TimerLock = new object();
 		
-		public string dbStr { get{ return db.ConnectionString;}}
+		public string dbConnStr { get{ return db.ConnectionString;}}
 		
 		const string _Name = "служба";
 		public const string MyServiceName = "AMQP Exchange";
@@ -94,11 +94,11 @@ namespace AMQP_Exchange
 			
 			Trace.TraceInformation("{1}\t{0}: запускается...", _Name, DateTime.Now);
 			
-			if (dbStr == null || String.IsNullOrWhiteSpace(dbStr)) {
+			if (dbConnStr == null || String.IsNullOrWhiteSpace(dbConnStr)) {
 				FailStart("Запуск невозможен: строка подключения к БД не может быть пустой");
 			}
 			
-			using (var SQLconn = new SqlConnection(dbStr)) {
+			using (var SQLconn = new SqlConnection(dbConnStr)) {
 				// Пытаемся подключиться к БД
 				int errorCounter = 0;
 				while (SQLconn.State == ConnectionState.Closed) {
@@ -106,7 +106,7 @@ namespace AMQP_Exchange
 						SQLconn.Open();
 					} catch (Exception ex) {
 						if (ex is InvalidOperationException) {
-							FailStart("Запуск невозможен: ошибка в строке подключения к БД \"{0}\"", dbStr);
+							FailStart("Запуск невозможен: ошибка в строке подключения к БД \"{0}\"", dbConnStr);
 						}
 						else if (errorCounter >= 3) {
 							FailStart("Превышено допустимое количество неудачных попыток подключения к БД. Последняя ошибка: {0}", ex.Message);
@@ -124,8 +124,8 @@ namespace AMQP_Exchange
 					new LogRecord() {
 						Source = _Name,
 						Message = "Успешный запуск, установлено соединение с БД",
-						Details = dbStr }
-					.Write(SQLconn, dbLog);
+						Details = dbConnStr }
+					.TryWrite(SQLconn, dbLog);
 				} catch (Exception ex) {
 					FailStart("Запуск невозможен: ошибка записи в БД, {0}", ex.Message);
 				}
@@ -140,63 +140,24 @@ namespace AMQP_Exchange
 							Source = _Name,
 							IsError = true,
 							Message = msg }
-						.Write(exdb);
+						.TryWrite(exdb);
 						FailStart(msg);
 					}
 				}
 				// Подключаемся к хостам RabbitMQ
 				foreach (var host in RabbitHosts) {
-//					if (!host.SslEnabled) {
-//						new LogRecord() {
-//							Source = _Name,
-//							HostId = host.Host_Id,
-//							Message = "Подключаемся к серверу RabbitMQ...",
-//							Details = host.ConnectionString }
-//						.Write(dbStr);
-//						
-//						try {
-//							var r_conn = new ConnectionStringParser().Parse(host.ConnectionString);
-//							var bus = RabbitHutch.CreateBus(host.ConnectionString);
-//							Buses.Add(bus);
-//							foreach (var q in RabbitQueues.Where(q => q.Host_Id == host.Host_Id)) {
-//								q.Bus = bus;
-//							}
-//							
-//							for (int i = 0; i < 10; i++) {
-//								if (bus.IsConnected) {
-//									new LogRecord() {
-//										Source = _Name,
-//										HostId = host.Host_Id,
-//										Message = "Установлено подключение к RabbitMQ",
-//										Details = host.ConnectionString }
-//									.Write(dbStr);
-//									
-//									break;
-//								}
-//								Thread.Sleep(10);
-//							}
-//							
-//						} catch (Exception ex) {
-//							new LogRecord() {
-//									Source = _Name,
-//									HostId = host.Host_Id,
-//									IsError = true,
-//									Message = String.Format("Ошибка при подключении к RabbitMQ: {0}", ex.Message),
-//									Details = host.ConnectionString }
-//							.Write(SQLconn);
-//						}
-//					} else {
-						var r_conn = new ConnectionConfiguration();
-						r_conn.PrefetchCount = Convert.ToUInt16((host.PrefetchCount > 0) ? host.PrefetchCount : 1);
-						r_conn.PublisherConfirms = true;
+
+						var rabbit_conn = new ConnectionConfiguration();
+						rabbit_conn.PrefetchCount = Convert.ToUInt16((host.PrefetchCount > 0) ? host.PrefetchCount : 1);
+						rabbit_conn.PublisherConfirms = true;
 						//r_conn.Port = Convert.ToUInt16((host.Port > 0) ? host.Port : 5671);
 						if (!String.IsNullOrWhiteSpace(host.VirtualHost)) {
-							r_conn.VirtualHost = host.VirtualHost;
+							rabbit_conn.VirtualHost = host.VirtualHost;
 						}
 						if (!String.IsNullOrWhiteSpace(host.Username)) {
-							r_conn.UserName = host.Username;
+							rabbit_conn.UserName = host.Username;
 							if (!String.IsNullOrWhiteSpace(host.Password)) {
-								r_conn.Password = host.Password;
+								rabbit_conn.Password = host.Password;
 							}
 						}
 						
@@ -208,14 +169,14 @@ namespace AMQP_Exchange
 							//r_host.Ssl.ServerName = host.Host;
 							r_host.Ssl.AcceptablePolicyErrors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors | System.Net.Security.SslPolicyErrors.RemoteCertificateNotAvailable | System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch;
 						}
-						r_conn.Hosts = new[] { r_host };
+						rabbit_conn.Hosts = new[] { r_host };
 						
 						new LogRecord() {
 							Source = _Name,
 							HostId = host.Host_Id,
 							Message = String.Format("Подключаемся к {0}серверу RabbitMQ...", host.SslEnabled ? "SSL " : ""),
 							Details = host.ConnectionString }
-						.Write(SQLconn, dbLog);
+						.TryWrite(SQLconn, dbLog);
 						
 						IEasyNetQLogger r_Log = new EasyNetQ.Loggers.NullLogger();
 						if (DebugFlag.Enabled) {
@@ -228,8 +189,8 @@ namespace AMQP_Exchange
 						}
 						
 						try {
-							r_conn.Validate();
-							var bus = RabbitHutch.CreateBus(r_conn, services => services.Register<IEasyNetQLogger>(logger => r_Log));
+							rabbit_conn.Validate();
+							var bus = RabbitHutch.CreateBus(rabbit_conn, services => services.Register<IEasyNetQLogger>(logger => r_Log));
 							Buses.Add(bus);
 							foreach (var q in RabbitQueues.Where(q => q.Host_Id == host.Host_Id)) {
 								q.Bus = bus;
@@ -242,7 +203,7 @@ namespace AMQP_Exchange
 										HostId = host.Host_Id,
 										Message = String.Format("Установлено {0}подключение к RabbitMQ", host.SslEnabled ? "SSL " : ""),
 										Details = host.ConnectionString }
-									.Write(SQLconn, dbLog);
+									.TryWrite(SQLconn, dbLog);
 									
 									break;
 								}
@@ -254,8 +215,8 @@ namespace AMQP_Exchange
 								Source = _Name,
 								IsError = true,
 								Message = String.Format("Ошибка при {0}подключении к серверу RabbitMQ: {1}", host.SslEnabled ? "SSL " : "", ex.Message),
-								Details = r_conn.ToString() }
-							.Write(SQLconn, dbLog);
+								Details = rabbit_conn.ToString() }
+							.TryWrite(SQLconn, dbLog);
 						}
 //					}
 				}
@@ -266,7 +227,7 @@ namespace AMQP_Exchange
 						Source = _Name,
 						IsError = true,
 						Message = msg }
-					.Write(SQLconn, dbLog);
+					.TryWrite(SQLconn, dbLog);
 					FailStart(msg);
 				}
 				
@@ -276,9 +237,9 @@ namespace AMQP_Exchange
 					Worker w;
 					
 					if (queue.Direction.Trim() == "In") {
-						w = new Receiver(dbStr, (IBus)queue.Bus, queue);
+						w = new Receiver(dbConnStr, (IBus)queue.Bus, queue);	
 					} else if (queue.Direction.Trim() == "Out") {
-						w = new Sender(dbStr, (IBus)queue.Bus, queue);
+						w = new Sender(dbConnStr, (IBus)queue.Bus, queue);
 					} else {
 						new LogRecord() {
 							Source = _Name,
@@ -287,7 +248,8 @@ namespace AMQP_Exchange
 							IsError = true,
 							Message = String.Format("Неизвестный тип очереди: '{0}'", queue.Direction),
 							Details = queue.Name }
-						.Write(SQLconn, dbLog);
+						.TryWrite(SQLconn, dbLog);
+						
 						continue;
 					}
 					
@@ -297,7 +259,7 @@ namespace AMQP_Exchange
 						QueueId = queue.Queue_Id,
 						Message = "Запускаем обработчик очереди сообщений...",
 						Details = w.QueueFullName }
-					.Write(SQLconn, dbLog);
+					.TryWrite(SQLconn, dbLog);
 					
 					w.Run();
 					workers.Add(w);
@@ -334,7 +296,7 @@ namespace AMQP_Exchange
 				return;
 			}
 			
-			using (var exdb = new exDb(dbStr)) {
+			using (var exdb = new exDb(dbConnStr)) {
 				foreach (var bus in Buses.Where(b => !b.IsConnected)) {
 					new LogRecord() {
 						Source = _Name,
@@ -342,7 +304,7 @@ namespace AMQP_Exchange
 						IsError = true,
 						Message = "Утеряно соединение с сервером RabbitMQ. Выполняются попытки переподключения...",
 						Details = RabbitQueues.FirstOrDefault(q => bus == q.Bus).Host.ConnectionString }
-					.Write(dbStr, dbLog);
+					.TryWrite(dbConnStr, dbLog);
 				}
 				
 				foreach (var w in workers) {
@@ -353,7 +315,7 @@ namespace AMQP_Exchange
 							QueueId = w.QueueId,
 							Message = "Обнаружено непредвиденное завершение обработчика очереди сообщений. Перезапускаем обработчик...",
 							Details = w.QueueFullName }
-						.Write(dbStr, dbLog);
+						.TryWrite(dbConnStr, dbLog);
 						w.Respawn();
 					}
 				}
@@ -373,7 +335,7 @@ namespace AMQP_Exchange
 			new LogRecord() {
 				Source = _Name,
 				Message = "Получена команда остановиться. Останавливаем обработчики..." }
-			.Write(dbStr, dbLog);
+			.TryWrite(dbConnStr, dbLog);
 			
 			foreach (var w in workers) {
 				w.ShouldStop = true;
@@ -394,7 +356,7 @@ namespace AMQP_Exchange
 					IsError = true,
 					Message = "Обработчик не остановился за отведенное время. Принудительное завершение работы...",
 					Details = w.QueueFullName }
-				.Write(dbStr, dbLog);
+				.TryWrite(dbConnStr, dbLog);
 				
 				w.Kill();
 			}
@@ -402,7 +364,7 @@ namespace AMQP_Exchange
 			new LogRecord() {
 					Source = _Name,
 					Message = "Все обработчики остановлены. Завершение работы службы" }
-			.Write(dbStr, dbLog);
+			.TryWrite(dbConnStr, dbLog);
 			
 			Trace.TraceInformation("{1}\t{0}: нормальное завершение работы", _Name, DateTime.Now);
 		}

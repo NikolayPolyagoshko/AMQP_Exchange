@@ -31,6 +31,7 @@ namespace AMQP_Exchange
 			this.Encoding = (Queue.Codepage > 0) ? Encoding.GetEncoding((int)Queue.Codepage) : Encoding.UTF8;
 		}
 		
+		
 		public override void Start()
 		{
 			if (DebugFlag.Enabled) {
@@ -47,7 +48,7 @@ namespace AMQP_Exchange
 				QueueId = this.QueueId,
 				Message = "Обработчик получения сообщений запущен",
 				Details = QueueFullName }
-			.Write(dbStr, dbLog);
+			.TryWrite(dbConnStr, dbLog);
 			
 			while (!Bus.IsConnected) {
 				Thread.Sleep(1000);
@@ -75,12 +76,12 @@ namespace AMQP_Exchange
 				QueueId = this.QueueId,
 				Message = "Получена команда остановить обработчик. Нормальное завершение работы",
 				Details = QueueFullName }
-			.Write(dbStr, dbLog);
+			.TryWrite(dbConnStr, dbLog);
 		}
 		
 		private void MessageHandler(Byte[] body, MessageProperties mp, MessageReceivedInfo mi)
 		{
-			using (var exdb = new exDb(dbStr)) {
+			using (var exdb = new exDb(dbConnStr)) {
 				exdb.Log = dbLog;
 				
 				new LogRecord() {
@@ -89,7 +90,7 @@ namespace AMQP_Exchange
 					QueueId = this.QueueId,
 					Message = String.Format("Принято сообщение {0} байт", body.Length),
 					Details =  this.QueueFullName }
-				.Write(exdb);
+				.TryWrite(exdb);
 			
 				var msg = Queue.Base64Data ? Convert.ToBase64String(body) 
 					: this.Encoding.GetString(body);
@@ -109,7 +110,7 @@ namespace AMQP_Exchange
 					Inbound_Id = record.Message_Id,
 					Message = String.Format("Записали {0}сообщение в БД", Queue.Base64Data ? "base64 " : ""),
 					Details = String.Format("{0} символов", msg.Length) }
-				.Write(exdb);
+				.TryWrite(exdb);
 			}
 		}
 	}

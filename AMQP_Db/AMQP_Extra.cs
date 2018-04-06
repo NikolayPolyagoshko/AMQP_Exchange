@@ -43,12 +43,12 @@ namespace AMQP_Db
 	
 	public partial class LogRecord
 	{
-		public bool Write(exDb db)
+		public bool TryWrite(exDb db)
 		{
 			db.LogTable.InsertOnSubmit(this);
 			return db.TrySubmitChanges();
 		}
-		public bool Write(string connStr, TextWriter dbLog = null)
+		public bool TryWrite(string connStr, TextWriter dbLog = null)
 		{
 			using (var exdb = new exDb(connStr)) {
 				exdb.Log = dbLog;
@@ -56,7 +56,7 @@ namespace AMQP_Db
 				return exdb.TrySubmitChanges();
 			}
 		}
-		public bool Write(IDbConnection conn, TextWriter dbLog = null)
+		public bool TryWrite(IDbConnection conn, TextWriter dbLog = null)
 		{
 			using (var exdb = new exDb(conn)) {
 				exdb.Log = dbLog;

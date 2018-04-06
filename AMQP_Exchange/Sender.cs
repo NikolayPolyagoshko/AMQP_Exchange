@@ -32,6 +32,7 @@ namespace AMQP_Exchange
 			PollInterval = (Queue.SenderPollInterval > 0) ? (int)Queue.SenderPollInterval : 10000;
 		}
 		
+		
 		public override void Start()
 		{
 			var aBus = Bus.Advanced;
@@ -50,10 +51,10 @@ namespace AMQP_Exchange
 				QueueId = this.QueueId,
 				Message = "Обработчик отправки сообщений запущен",
 				Details = QueueFullName }
-			.Write(dbStr, dbLog);
+			.TryWrite(dbConnStr, dbLog);
 			
 			while (!ShouldStop) {
-				using (var exdb = new exDb(dbStr)) {
+				using (var exdb = new exDb(dbConnStr)) {
 					exdb.Log = dbLog;
 					Outbound message;
 					
@@ -67,7 +68,7 @@ namespace AMQP_Exchange
 							Outbound_Id = message.Message_Id,
 							Message = "Начинаем отправку сообщения...",
 							Details = String.Format("{0} символов", message.Message.Length) }
-						.Write(exdb);
+						.TryWrite(exdb);
 						
 						byte[] data;
 						try {
@@ -83,7 +84,7 @@ namespace AMQP_Exchange
 								IsError = true,
 								Message = "Ошибка декодирования base64",
 								Details = ex.Message }
-							.Write(exdb);
+							.TryWrite(exdb);
 							
 							message.ErrorFlag = true;
 							message.DateSent = new DateTime(1900, 1, 1);
@@ -98,7 +99,7 @@ namespace AMQP_Exchange
 							Outbound_Id = message.Message_Id,
 							Message = Queue.Base64Data ? "Декодировали base64" : "Сформировали массив байт",
 							Details = String.Format("{0} байт", data.Length) }
-						.Write(exdb);
+						.TryWrite(exdb);
 						
 						try {
 							var mp = new MessageProperties();
@@ -120,7 +121,7 @@ namespace AMQP_Exchange
 								IsError = true,
 								Message = "Ошибка при отправке сообщения",
 								Details = ex.Message }
-							.Write(exdb);
+							.TryWrite(exdb);
 							Thread.Sleep(PollInterval);
 							
 							continue;
@@ -133,15 +134,14 @@ namespace AMQP_Exchange
 							Outbound_Id = message.Message_Id,
 							Message = "Сообщение успешно отправлено!",
 							Details = this.QueueFullName }
-						.Write(exdb);
+						.TryWrite(exdb);
 						
 						message.DateSent = DateTime.Now;
 						exdb.TrySubmitChanges();
 					}
-					
-					Thread.Sleep(PollInterval);
-					
 				}
+				
+				Thread.Sleep(PollInterval);
 			}
 			
 			// Вышли из главного цикла (ShouldStop = true)
@@ -151,7 +151,7 @@ namespace AMQP_Exchange
 				QueueId = this.QueueId,
 				Message = "Получена команда остановить обработчик. Нормальное завершение работы",
 				Details = QueueFullName }
-			.Write(dbStr, dbLog);
+			.TryWrite(dbConnStr, dbLog);
 		}
 	}
 }
