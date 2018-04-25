@@ -8,11 +8,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle ("AMQP_Db")]
-[assembly: AssemblyDescription ("Служба обмена AMQP-SQL")]
+[assembly: AssemblyDescription ("RabbitMQ SQL connector db")]
 [assembly: AssemblyConfiguration ("")]
-[assembly: AssemblyCompany ("Николай Полягошко")]
-[assembly: AssemblyProduct ("AMQP_Db")]
-[assembly: AssemblyCopyright ("Николай Полягошко (c) 2015-2016")]
+[assembly: AssemblyCompany ("Nikolay Polyagoshko")]
+[assembly: AssemblyProduct ("AMQP_Exchange")]
+[assembly: AssemblyCopyright ("Nikolay Polyagoshko (c) 2015-2018")]
 [assembly: AssemblyTrademark ("")]
 [assembly: AssemblyCulture ("")]
 // This sets the default COM visibility of types in the assembly to invisible.
