@@ -40,7 +40,7 @@ Based upon EasyNetQ by Mike Hadlow http://easynetq.com/
      * QueueId		- Autoincrement Id of a Queue
      * HostID		- Id of a RabbitMQ host from the Hosts table
      * Direction		- Should be 'In' or 'Out'
-     * Name		- Queue name or Routing Key name. Routing Key can be used for outbound messages, only if Exchange is specified\
+     * Name		- Queue name or Routing Key name. Routing Key can be used for outbound messages, only if Exchange is specified
      * SenderPollInterval - For outbound, controls how frequently worker will check Outbound table for new available message data. Can be null, default is 10000 ms (10 seconds)
      * Base64Data         - If enabled for inbound, messages will be Base64-encoded upon receiving. For outbound, messages will be Base64-decoded before sending
      * CodePage           - Codepage, can be Null. Default is UTF-8 (65001)
@@ -64,8 +64,8 @@ Based upon EasyNetQ by Mike Hadlow http://easynetq.com/
 * Log		- Service operatrion log
      * Log_Id		- Autoincrement Id of a Log entry
      * Timestamp		- Log entry date and time
-     * Source		- Source name. 'Service' or 'Sender_XX' or 'Receiver_XX', where XX is the QueueId\
-     * IsError		- Flag is set if this log entry is an error log entry\
+     * Source		- Source name. 'Service' or 'Sender_XX' or 'Receiver_XX', where XX is the QueueId
+     * IsError		- Flag is set if this log entry is an error log entry
      * Inbound_Id	- Id of the Inbound message, if applicable
      * Outbound_Id	- Id of the Outbound message, if applicable
      * Message		- Log message
