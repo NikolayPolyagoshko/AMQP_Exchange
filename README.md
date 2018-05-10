@@ -29,12 +29,12 @@ Based upon EasyNetQ by Mike Hadlow http://easynetq.com/
  * Hosts 	- Confiruration of RabbitMQ hosts
      * HostId	- Autoincrement Id of a Host
      * Host		- RabbitMQ server hostname or IP address
-     * Port		- Server port, can be Null. Default is 5672 (5671 if SSL is enabled)
-     * VirtualHost    - Virtual Host, can be Null. Default is "/"
+     * Port		- Server port, can be null. Default is 5672 (5671 if SSL is enabled)
+     * VirtualHost    - Virtual Host, can be null. Default is "/"
      * Username		- Username
      * Password		- Password
      * SslEnabled	- Enable this flag for a SSL connection to a RabbitMQ server
-     * PrefetchCount	- Prefetch Count parameter (see RabbitMQ docs http://www.rabbitmq.com/consumer-prefetch.html). Can be Null, default is 1
+     * PrefetchCount	- Prefetch Count parameter (see RabbitMQ docs http://www.rabbitmq.com/consumer-prefetch.html). Can be null, default is 1
 
  * Queues	- Confiruration of RabbitMQ queues
      * QueueId		- Autoincrement Id of a Queue
@@ -43,20 +43,20 @@ Based upon EasyNetQ by Mike Hadlow http://easynetq.com/
      * Name		- Queue name or Routing Key name. Routing Key can be used for outbound messages, only if Exchange is specified
      * SenderPollInterval - For outbound, controls how frequently worker will check Outbound table for new available message data. Can be null, default is 10000 ms (10 seconds)
      * Base64Data         - If enabled for inbound, messages will be Base64-encoded upon receiving. For outbound, messages will be Base64-decoded before sending
-     * CodePage           - Codepage, can be Null. Default is UTF-8 (65001)
-     * Exchange           - For outbound, RabbitMQ exchange name. Can be Null. If Exchange is specified, 'Name' is interpreted as Routing Key
+     * CodePage           - Codepage, can be null. Default is UTF-8 (65001)
+     * Exchange           - For outbound, RabbitMQ exchange name. Can be null. If Exchange is specified, 'Name' is interpreted as Routing Key
 
  * Inbound	- Inbound messages table
      * MessageId		- Autoincrement Id of an Inbound Message
      * QueueId		- Id of a Queue this message came from
      * DateReceived	- Date when message was received. Filled by worker after writing message into Inbound table
-     * DateRead		- Defauld is Null. Not processed by service. Use it in you app to filter processed messages
+     * DateRead		- Defauld is null. Not processed by service. Use it in you app to filter processed messages
      * Message		- Message data itself. If 'Base64Data' enabled in Base64-encoded form
      
 * Outbound 	- Outbound messages table
      * MessageId		- Autoincrement Id of an Outbound Message
      * QueueId		- Id of a Queue this message directed to
-     * DateWritten	- Defauld is Null, not processed by service. Can be used in your app to store timestamp
+     * DateWritten	- Defauld is null, not processed by service. Can be used in your app to store timestamp
      * DateSent		- Date when message was sent out. Filled by worker after receiving confirmation from Rabbit host
      * Message		- Message data itself. If 'Base64Data' enabled it should be in Base64-encoded form
      * ErrorFlag		- Flag is set when something is went wrong with sending message
