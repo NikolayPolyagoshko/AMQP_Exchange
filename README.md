@@ -38,7 +38,7 @@ Based upon EasyNetQ by Mike Hadlow http://easynetq.com/
 
  * Queues	- Confiruration of RabbitMQ queues
      * QueueId		- Autoincrement Id of a Queue
-     * HostID		- Id of a RabbitMQ host in the Hosts table
+     * HostID		- Id of a RabbitMQ host from the Hosts table
      * Direction		- Should be 'In' or 'Out'
      * Name		- Queue name or Routing Key name. Routing Key can be used for outbound messages, only if Exchange is specified\
      * SenderPollInterval - For outbound, controls how frequently worker will check Outbound table for new available message data. Can be null, default is 10000 ms (10 seconds)
