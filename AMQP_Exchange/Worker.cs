@@ -70,15 +70,11 @@ namespace AMQP_Exchange
 		
 		public abstract void Start();
 		
-		public void Run()
+		public void SafeStart()
 		{
-			if (Thread != null && Thread.IsAlive) {
-				throw new ThreadStateException();
-			}
-			this.Thread = new Thread(new ThreadStart( this.Start ));
-			this.Thread.IsBackground = true;
 			try {
-				this.Thread.Start();
+				this.Start();
+				
 			} catch (Exception ex) {
 				
 				new LogRecord() {
@@ -93,9 +89,19 @@ namespace AMQP_Exchange
 				if (!ShouldStop) {
 					Respawn();
 				}
+				
 				//throw;
 			}
-			
+		}
+		
+		public void Run()
+		{
+			if (Thread != null && Thread.IsAlive) {
+				throw new ThreadStateException();
+			}
+			this.Thread = new Thread(new ThreadStart( this.SafeStart ));
+			this.Thread.IsBackground = true;
+			this.Thread.Start();
 		}
 		
 		public void Kill(int Delay = 100)
