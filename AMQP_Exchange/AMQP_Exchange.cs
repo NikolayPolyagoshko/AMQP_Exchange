@@ -345,7 +345,7 @@ namespace AMQP_Exchange
 				if (workers.All(w => !w.IsAlive)) {
 					break;
 				}
-				Thread.Sleep(100);
+				Thread.Sleep(250);
 			}
 			
 			foreach (var w in workers.Where(w => w.IsAlive)) {
