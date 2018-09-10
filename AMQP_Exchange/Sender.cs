@@ -33,6 +33,17 @@ namespace AMQP_Exchange
 		}
 		
 		
+		public void LogInfo(exDb dbContext, string _Message, string _Details, int? msg_Id = null) 
+		{
+			WriteLogMessage(dbContext, null, msg_Id, false, _Message, _Details);
+		}
+		
+		public void LogError(exDb dbContext, string _Message, string _Details, int? msg_Id = null) 
+		{
+			WriteLogMessage(dbContext, null, msg_Id, true, _Message, _Details);
+		}
+		
+		
 		public override void Start()
 		{
 			var aBus = Bus.Advanced;
@@ -53,12 +64,17 @@ namespace AMQP_Exchange
 				Details = QueueFullName }
 			.TryWrite(dbConnStr, dbLog);
 			
+			int MsgCounter = 0;
+			int TotalMsgCounter = 0;
+			long BytesProcessed = 0;
+			long TotalBytesProcessed = 0;
+			
 			while (!ShouldStop) {
 				using (var exdb = new exDb(dbConnStr)) {
 					exdb.Log = dbLog;
 					Outbound message;
 					
-					while (aBus.IsConnected &&
+					while (!ShouldStop && aBus.IsConnected &&
 					       null != (message = exdb.Outbound.FirstOrDefault(o => o.QueueId == this.QueueId && o.DateSent == null)))
 					{
 						new LogRecord() {
@@ -71,9 +87,15 @@ namespace AMQP_Exchange
 						.TryWrite(exdb);
 						
 						byte[] data;
+						//TODO: every xx (1000?) messages do gc.collect(2) to clear LOH
 						try {
 							data = Queue.Base64Data ? Convert.FromBase64String(message.Message)
 								: Encoding.UTF8.GetBytes(message.Message);
+							
+							BytesProcessed += sizeof(byte) * data.Length;
+							TotalBytesProcessed += sizeof(byte) * data.Length;
+							MsgCounter++;
+							TotalMsgCounter++;
 							
 						} catch (Exception ex) {
 							new LogRecord() {
@@ -90,6 +112,38 @@ namespace AMQP_Exchange
 							message.DateSent = new DateTime(1900, 1, 1);
 							exdb.TrySubmitChanges();
 							continue;
+						}
+						
+						if (IntPtr.Size == 4 && BytesProcessed > 3*(1024*1024*512)) {
+							
+							LogInfo(exdb, "Forcing GC.Collect(2)",
+							        String.Format("Processed {0} messages, {1} MB since last GC. Total {2} messages, {3} MB. Reported GC UsedMem {4} MB"
+							                      ,MsgCounter, BytesProcessed/(1024*1024), TotalMsgCounter, TotalBytesProcessed/(1024*1024), GC.GetTotalMemory(false)/(1024*1024)));
+							
+//							new LogRecord() {
+//								Source = this._Name,
+//								HostId = this.HostId,
+//								QueueId = this.QueueId,
+//								Message = "Forcing GC.Collect(2)",
+//								Details = String.Format("Processed {0} messages, {1} MB since last GC ({2} msgs, {3} MB total). Reported GC UsedMem {4} MB"
+//								                        ,MsgCounter, BytesProcessed/(1024*1024), TotalMsgCounter, TotalBytesProcessed/(1024*1024), GC.GetTotalMemory(false)/(1024*1024)) }
+//							.TryWrite(exdb);
+							
+							GC.Collect(2);
+							
+							MsgCounter = 0;
+							BytesProcessed = 0;
+							
+							LogInfo(exdb, "Finished GC.Collect(2)",
+							        String.Format("Reported GC UsedMem  {0} MB", GC.GetTotalMemory(false)/(1024*1024)));
+							
+//							new LogRecord() {
+//								Source = this._Name,
+//								HostId = this.HostId,
+//								QueueId = this.QueueId,
+//								Message = "Finished GC.Collect(2)",
+//								Details = String.Format("Reported GC UsedMem  {0} MB", GC.GetTotalMemory(false)/(1024*1024)) }
+//							.TryWrite(exdb);
 						}
 						
 						new LogRecord() {

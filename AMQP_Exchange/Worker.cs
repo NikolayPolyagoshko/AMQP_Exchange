@@ -125,5 +125,20 @@ namespace AMQP_Exchange
 			}
 			Run();
 		}
+		
+		protected void WriteLogMessage(exDb dbContext, int? _Inbound_Id, int? _Outbound_Id, bool _IsError, string _Message, string _Details)
+		{
+			new LogRecord() {
+				Source = this._Name,
+				HostId = this.HostId,
+				QueueId = this.QueueId,
+				Inbound_Id = _Inbound_Id,
+				Outbound_Id = _Outbound_Id,
+				IsError = _IsError,
+				Message = _Message,
+				Details = _Details }
+			.TryWrite(dbContext);
+		}
+		
 	}
 }
