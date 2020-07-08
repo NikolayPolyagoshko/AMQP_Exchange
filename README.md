@@ -1,7 +1,7 @@
 # AMQP_Exchange
 
-A simple Database to RabbitMQ connector (despite the name, currently RabbitMQ is only supported)\
-Tested with MSSQL only, but should work with other .NET providers\
+AMQP_Exchange is a simple Database to RabbitMQ connector. Despite the name, only RabbitMQ is supported currently\
+Tested with MSSQL, should work with other .NET db providers\
 Based upon EasyNetQ by Mike Hadlow http://easynetq.com/
 
 ## Connector operation
@@ -10,16 +10,16 @@ Based upon EasyNetQ by Mike Hadlow http://easynetq.com/
  * Connector could be started as a console app with "-debug" key 
 
 ## How it works
- * All configurable parameters except db ConnectionString are inside AMQP_Ex database.
+ * All configurable parameters except DatabaseConnectionString stored inside AMQP_Ex database.
  * Inbound workers bound to the Queues, incoming messages put into 'Inbound' table upon receiving.
  * Outbound messages can be directed to a Queue or an RoutingKey + Exchange. Outbound workers periodicaly checks 'Outbound' table and sends them out
  * There is an per-queue option for a Base64-encoded message handling. If enabled, inbound messages encoded after receiving, otbound decoded before sending
  * Logs are stored in the log table
- * Text logs are stored in %TEMP%\AMQP_Exchange. When running with service account, path is %windir%\ServiceProfiles\<Profile_Name>\AppData\Local\Temp\AMQP_Exchange
+ * Text logs are stored in %TEMP%\AMQP_Exchange. When running with service account, paths are %windir%\ServiceProfiles\<Profile_Name>\AppData\Local\Temp\AMQP_Exchange
 
 ## Install
- * Unpack zip and run install.cmd. Service and the exchange db will be created.
- * If using database other than MSSQL, you`ll have to to create database and tables manually
+ * Unpack zip and run install.cmd. Service and the exchange database will be auto-created.
+ * If using db engines other than MSSQL, you`ll have to to create database and tables manually
  * Edit AMQP_Exchange.exe.config, add connection string to AMQP_Ex database
  * Edit Hosts and Queues tables, add at least one host and at least one queue
  * Start the "AMQP Exchange" service
